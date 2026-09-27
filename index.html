@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Конвертер валют — курсы и цепочки обмена</title>
+
+    <!-- SEO -->
+    <meta
+      name="description"
+      content="Бесплатный конвертер валют: быстрая конвертация, ручная правка курса и сравнение цепочек обмена (например RUB → USD → VND) с прямым обменом."
+    />
+    <meta name="keywords" content="конвертер валют, курс валют, обмен валют, калькулятор валют, RUB USD VND, цепочка обмена валют" />
+    <meta name="author" content="Currency Converter" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://currency-converter.example.com/" />
+
+    <!-- Open Graph / соцсети -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Конвертер валют — курсы и цепочки обмена" />
+    <meta
+      property="og:description"
+      content="Быстрая конвертация валют и сравнение цепочек обмена с ручной правкой курса."
+    />
+    <meta property="og:url" content="https://currency-converter.example.com/" />
+    <meta property="og:image" content="https://currency-converter.example.com/assets/icons/icon-512.png" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="twitter:card" content="summary" />
+
+    <!-- Geo (уточните под регион вашей аудитории) -->
+    <meta name="geo.region" content="RU" />
+    <meta name="geo.placename" content="Russia" />
+    <meta name="distribution" content="global" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#0f1420" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Конвертер валют" />
+    <link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192.png" />
+
+    <link rel="stylesheet" href="./assets/css/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app__header">
+        <h1>Конвертер валют</h1>
+        <div class="status" id="status">Загрузка курсов…</div>
+      </header>
+
+      <section class="card converter">
+        <h2>Быстрая конвертация</h2>
+        <div class="converter__row">
+          <div class="field">
+            <label for="amount">Сумма</label>
+            <input type="text" inputmode="decimal" id="amount" value="100" />
+          </div>
+          <div class="field">
+            <label for="fromCurrency">Из</label>
+            <select id="fromCurrency"></select>
+          </div>
+          <button class="swap-btn" id="swapBtn" title="Поменять местами">⇄</button>
+          <div class="field">
+            <label for="toCurrency">В</label>
+            <select id="toCurrency"></select>
+          </div>
+        </div>
+        <div class="converter__result">
+          <div class="result-value" id="resultValue">—</div>
+          <div class="rate-edit">
+            <label for="mainRate">Курс (можно исправить вручную)</label>
+            <input type="text" inputmode="decimal" id="mainRate" />
+            <button id="resetMainRate" class="link-btn">сбросить к официальному</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card chain-section">
+        <h2>Сравнение цепочек обмена</h2>
+        <p class="hint">
+          Постройте одну или несколько цепочек валют (например RUB → USD → VND) и сравните результат.
+          Нажмите на валюту, чтобы поменять её. Наведите на стрелку между блоками, чтобы вставить
+          валюту между ними. Курс на каждом шаге можно поправить вручную.
+        </p>
+
+        <div class="chains" id="chains"></div>
+
+        <button id="addChainBtn" class="btn btn--secondary">+ Добавить цепочку</button>
+
+        <div class="compare" id="compare"></div>
+      </section>
+
+      <footer class="app__footer">
+        Курсы: <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">exchangerate-api.com (open access)</a>.
+        Обновляются раз в сутки, поэтому для точных расчётов правьте курс вручную.
+      </footer>
+    </div>
+
+    <script src="./assets/js/index.js"></script>
+    <script src="./assets/js/register-sw.js"></script>
+  </body>
+</html>
