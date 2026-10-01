@@ -1,21 +1,21 @@
 // Bump this on every deploy so the browser installs a fresh service worker
 // and the new app shell replaces the old cache automatically.
-var CACHE_VERSION = "v1";
-var CACHE_NAME = "currency-converter-" + CACHE_VERSION;
+var CACHE_VERSION = 'v2';
+var CACHE_NAME = 'currency-converter-' + CACHE_VERSION;
 
 var APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./assets/css/style.css",
-  "./assets/js/index.js",
-  "./assets/js/register-sw.js",
-  "./assets/icons/icon.svg",
-  "./assets/icons/icon-192.png",
-  "./assets/icons/icon-512.png",
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './assets/css/style.css',
+  './assets/js/index.js',
+  './assets/js/register-sw.js',
+  './assets/icons/icon.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
 ];
 
-self.addEventListener("install", function (event) {
+self.addEventListener('install', function (event) {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
@@ -27,11 +27,11 @@ self.addEventListener("install", function (event) {
         // of waiting for all tabs to close — that's what gives us
         // auto-update on next launch rather than requiring a manual reload.
         return self.skipWaiting();
-      })
+      }),
   );
 });
 
-self.addEventListener("activate", function (event) {
+self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches
       .keys()
@@ -39,27 +39,29 @@ self.addEventListener("activate", function (event) {
         return Promise.all(
           keys
             .filter(function (key) {
-              return key.indexOf("currency-converter-") === 0 && key !== CACHE_NAME;
+              return (
+                key.indexOf('currency-converter-') === 0 && key !== CACHE_NAME
+              );
             })
             .map(function (key) {
               return caches.delete(key);
-            })
+            }),
         );
       })
       .then(function () {
         return self.clients.claim();
-      })
+      }),
   );
 });
 
-self.addEventListener("fetch", function (event) {
-  if (event.request.method !== "GET") return;
+self.addEventListener('fetch', function (event) {
+  if (event.request.method !== 'GET') return;
 
   var url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
   // Live exchange rates must always hit the network — never cache them.
-  if (url.hostname.indexOf("er-api.com") !== -1) return;
+  if (url.hostname.indexOf('er-api.com') !== -1) return;
 
   // Network-first for the app shell so a deployed update is picked up as
   // soon as the device is online, falling back to cache when offline.
@@ -74,8 +76,8 @@ self.addEventListener("fetch", function (event) {
       })
       .catch(function () {
         return caches.match(event.request).then(function (cached) {
-          return cached || caches.match("./index.html");
+          return cached || caches.match('./index.html');
         });
-      })
+      }),
   );
 });
