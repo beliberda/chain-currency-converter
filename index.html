@@ -61,18 +61,18 @@
           </div>
           <div class="field">
             <label for="fromCurrency">Из</label>
-            <select id="fromCurrency"></select>
+            <div class="ccy-select" id="fromCurrency"></div>
           </div>
           <button class="swap-btn" id="swapBtn" title="Поменять местами">⇄</button>
           <div class="field">
             <label for="toCurrency">В</label>
-            <select id="toCurrency"></select>
+            <div class="ccy-select" id="toCurrency"></div>
           </div>
         </div>
         <div class="converter__result">
           <div class="result-value" id="resultValue">—</div>
           <div class="rate-edit">
-            <label for="mainRate">Курс (можно исправить вручную)</label>
+            <label for="mainRate" id="mainRateLabel">Курс (можно исправить вручную)</label>
             <input type="text" inputmode="decimal" id="mainRate" />
             <button id="resetMainRate" class="link-btn">сбросить к официальному</button>
           </div>
@@ -100,6 +100,8 @@
       </footer>
     </div>
 
+    <script src="./assets/js/currency-data.js"></script>
+    <script src="./assets/js/currency-select.js"></script>
     <script src="./assets/js/index.js"></script>
     <script src="./assets/js/register-sw.js"></script>
   </body>

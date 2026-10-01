@@ -17,15 +17,19 @@
    */
   var chains = [];
   var chainIdCounter = 0;
+  var chainSelectInstances = []; // CurrencySelect instances from the last renderChains(), destroyed on re-render
 
   // ---- DOM ----
   var $status = document.getElementById("status");
   var $amount = document.getElementById("amount");
-  var $from = document.getElementById("fromCurrency");
-  var $to = document.getElementById("toCurrency");
+  var $fromContainer = document.getElementById("fromCurrency");
+  var $toContainer = document.getElementById("toCurrency");
+  var $from = null; // CurrencySelect instance, created once currencies are known
+  var $to = null; // CurrencySelect instance, created once currencies are known
   var $swap = document.getElementById("swapBtn");
   var $resultValue = document.getElementById("resultValue");
   var $mainRate = document.getElementById("mainRate");
+  var $mainRateLabel = document.getElementById("mainRateLabel");
   var $resetMainRate = document.getElementById("resetMainRate");
   var $chains = document.getElementById("chains");
   var $addChainBtn = document.getElementById("addChainBtn");
@@ -47,29 +51,25 @@
     return rates[to] / rates[from];
   }
 
-  function populateSelect(select, selected) {
-    select.innerHTML = "";
-    currencies.forEach(function (code) {
-      var opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = code;
-      if (code === selected) opt.selected = true;
-      select.appendChild(opt);
-    });
-  }
-
   // ---- quick converter ----
-  function currentMainRate() {
-    return mainRateOverride !== null ? mainRateOverride : directRate($from.value, $to.value);
+  // The rate is always quoted as "how much does 1 unit of the destination
+  // currency cost in the source currency" (e.g. RUB -> USD shows "1 USD = 86
+  // RUB"), since that's how people actually think about an exchange rate.
+  function currentQuote() {
+    if (mainRateOverride !== null) return mainRateOverride;
+    return directRate($to.getValue(), $from.getValue());
   }
 
   function renderMain() {
-    var rate = currentMainRate();
-    $mainRate.value = isFinite(rate) ? round(rate, 8) : "";
+    var quote = currentQuote();
+    $mainRate.value = isFinite(quote) ? round(quote, 8) : "";
+    $mainRateLabel.textContent = "1 " + $to.getValue() + " = ? " + $from.getValue() + " (можно исправить)";
+
+    var rate = isFinite(quote) && quote > 0 ? 1 / quote : NaN;
     var amount = parseLocaleNumber($amount.value) || 0;
     var result = amount * rate;
     $resultValue.textContent = isFinite(result)
-      ? fmt(result) + " " + $to.value
+      ? fmt(result) + " " + $to.getValue()
       : "—";
     saveSettings();
   }
@@ -91,8 +91,8 @@
     try {
       var data = {
         amount: $amount.value,
-        from: $from.value,
-        to: $to.value,
+        from: $from.getValue(),
+        to: $to.getValue(),
         mainRateOverride: mainRateOverride,
         chains: chains.map(function (chain) {
           return {
@@ -129,13 +129,11 @@
     renderMain();
     renderCompare();
   });
-  $from.addEventListener("change", onFromToChanged);
-  $to.addEventListener("change", onFromToChanged);
 
   $swap.addEventListener("click", function () {
-    var a = $from.value;
-    $from.value = $to.value;
-    $to.value = a;
+    var a = $from.getValue();
+    $from.setValue($to.getValue());
+    $to.setValue(a);
     onFromToChanged();
   });
 
@@ -191,6 +189,10 @@
   }
 
   function renderChains() {
+    chainSelectInstances.forEach(function (instance) {
+      instance.destroy();
+    });
+    chainSelectInstances = [];
     $chains.innerHTML = "";
     chains.forEach(function (chain) {
       var row = document.createElement("div");
@@ -252,22 +254,19 @@
         }
         block.appendChild(rateWrap);
 
-        var select = document.createElement("select");
-        select.className = "chain-block__currency";
-        currencies.forEach(function (c) {
-          var opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          if (c === code) opt.selected = true;
-          select.appendChild(opt);
-        });
-        select.addEventListener("change", function () {
-          chain.currencies[i] = select.value;
-          recomputeLiveRates(chain);
-          renderChains();
-          renderCompare();
-        });
-        block.appendChild(select);
+        var selectWrap = document.createElement("div");
+        selectWrap.className = "chain-block__currency";
+        block.appendChild(selectWrap);
+        chainSelectInstances.push(CurrencySelect.create(selectWrap, {
+          currencies: currencies,
+          value: code,
+          onChange: function (newCode) {
+            chain.currencies[i] = newCode;
+            recomputeLiveRates(chain);
+            renderChains();
+            renderCompare();
+          },
+        }));
 
         if (chain.currencies.length > 2) {
           var removeBlock = document.createElement("button");
@@ -315,7 +314,7 @@
   }
 
   $addChainBtn.addEventListener("click", function () {
-    var base = chains.length ? chains[chains.length - 1].currencies : [$from.value, $to.value];
+    var base = chains.length ? chains[chains.length - 1].currencies : [$from.getValue(), $to.getValue()];
     chains.push(makeChain(base));
     renderChains();
     renderCompare();
@@ -378,8 +377,16 @@
     if (saved && currencies.indexOf(saved.from) !== -1) defaultFrom = saved.from;
     if (saved && currencies.indexOf(saved.to) !== -1) defaultTo = saved.to;
 
-    populateSelect($from, defaultFrom);
-    populateSelect($to, defaultTo);
+    $from = CurrencySelect.create($fromContainer, {
+      currencies: currencies,
+      value: defaultFrom,
+      onChange: onFromToChanged,
+    });
+    $to = CurrencySelect.create($toContainer, {
+      currencies: currencies,
+      value: defaultTo,
+      onChange: onFromToChanged,
+    });
 
     if (saved && typeof saved.amount === "string" && saved.amount !== "") {
       $amount.value = saved.amount;
